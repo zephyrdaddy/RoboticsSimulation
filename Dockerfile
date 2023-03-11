@@ -107,8 +107,8 @@ ARG QP_OASES_VERSION=3.2.1
 WORKDIR /tmp
 RUN set -x && \
   wget -q https://github.com/coin-or/qpOASES/archive/refs/tags/releases/${QP_OASES_VERSION}.zip && \
-  unzip -q qpOASES-releases-${QP_OASES_VERSION}.zip && \
-  rm -rf qpOASES-releases-${QP_OASES_VERSION}.zip && \
+  unzip -q ${QP_OASES_VERSION}.zip && \
+  rm -rf ${QP_OASES_VERSION}.zip && \
   cd qpOASES-releases-${QP_OASES_VERSION} && \
   mkdir -p build && \
   cd build && \
