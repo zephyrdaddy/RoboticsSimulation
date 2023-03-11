@@ -5,7 +5,10 @@ cc_library(
         srcs = glob(["src/*.cpp"]),
         hdrs = glob(["include/*.hpp"]),
         copts = [""],
-        deps = ["@mujoco//:mujoco"],
+        deps = ["@mujoco//:mujoco",
+                "@osqp//:osqp",
+                "@rbdl//:rbdl",
+                "@qpoases//:qpoases"],
         visibility = ["//visibility:public"],
         linkstatic = 1,
 )
