@@ -1,17 +1,13 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary")
 
-cc_library(
-        name = "robot_lib",
-        srcs = glob(["src/*.cpp"]),
-        hdrs = glob(["include/*.hpp"]),
-        copts = [""],
+cc_binary(
+        name = "pd_controller",
+        srcs = ["src/pd.cpp"],
         deps = ["@mujoco//:mujoco",
                 "@osqp//:osqp",
                 "@rbdl//:rbdl",
-                "@qpoases//:qpoases"],
+                "@qpoases//:qpoases",
+                "@glfw3//:glfw3"],
         visibility = ["//visibility:public"],
         linkstatic = 1,
 )
-
-# cc_binary(
-# )
