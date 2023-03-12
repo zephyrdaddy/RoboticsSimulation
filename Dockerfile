@@ -1,5 +1,45 @@
-FROM ubuntu:18.04
-ENV DEBIAN_FRONTEND noninteractive
+ARG IMAGE_NAME
+FROM ${IMAGE_NAME}:12.1.0-runtime-ubuntu18.04 as base
+
+ENV NV_CUDA_LIB_VERSION "12.1.0-1"
+
+FROM base as base-amd64
+
+ENV NV_CUDA_CUDART_DEV_VERSION 12.1.55-1
+ENV NV_NVML_DEV_VERSION 12.1.55-1
+ENV NV_LIBCUSPARSE_DEV_VERSION 12.0.2.55-1
+ENV NV_LIBNPP_DEV_VERSION 12.0.2.50-1
+ENV NV_LIBNPP_DEV_PACKAGE libnpp-dev-12-1=${NV_LIBNPP_DEV_VERSION}
+
+ENV NV_LIBCUBLAS_DEV_VERSION 12.1.0.26-1
+ENV NV_LIBCUBLAS_DEV_PACKAGE_NAME libcublas-dev-12-1
+ENV NV_LIBCUBLAS_DEV_PACKAGE ${NV_LIBCUBLAS_DEV_PACKAGE_NAME}=${NV_LIBCUBLAS_DEV_VERSION}
+
+ENV NV_NVPROF_VERSION 12.1.55-1
+ENV NV_NVPROF_DEV_PACKAGE cuda-nvprof-12-1=${NV_NVPROF_VERSION}
+
+# FROM base-${TARGETARCH}
+
+# ARG TARGETARCH
+
+LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cuda-cudart-dev-12-1=${NV_CUDA_CUDART_DEV_VERSION} \
+    cuda-command-line-tools-12-1=${NV_CUDA_LIB_VERSION} \
+    cuda-minimal-build-12-1=${NV_CUDA_LIB_VERSION} \
+    cuda-libraries-dev-12-1=${NV_CUDA_LIB_VERSION} \
+    cuda-nvml-dev-12-1=${NV_NVML_DEV_VERSION} \
+    ${NV_NVPROF_DEV_PACKAGE} \
+    ${NV_LIBNPP_DEV_PACKAGE} \
+    libcusparse-dev-12-1=${NV_LIBCUSPARSE_DEV_VERSION} \
+    ${NV_LIBCUBLAS_DEV_PACKAGE} \
+    && rm -rf /var/lib/apt/lists/*
+
+# Keep apt from auto upgrading the cublas and nccl packages. See https://gitlab.com/nvidia/container-images/cuda/-/issues/88
+RUN apt-mark hold ${NV_LIBCUBLAS_DEV_PACKAGE_NAME}
+ENV LIBRARY_PATH /usr/local/cuda/lib64/stubs
+
 ARG BOOST_VERSION=1.80.0
 
 # install dependencies via apt
@@ -39,6 +79,19 @@ RUN set -x && \
   apt-get install -y vim htop && \
   apt-get autoremove -y -qq && \
   rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && \
+    apt-get install -y -qq \
+    libglfw3 libglfw3-dev && \
+    rm -rf /var/lib/apt/lists/*
+
+# RUN apt-get update && apt-get install -y --no-install-recommends \
+#         pkg-config \
+#         libglvnd-dev libglvnd-dev:i386 \
+#         libgl1-mesa-dev libgl1-mesa-dev:i386 \
+#         libegl1-mesa-dev libegl1-mesa-dev:i386 \
+#         libgles2-mesa-dev libgles2-mesa-dev:i386 && \
+#     rm -rf /var/lib/apt/lists/*
 
 ARG CMAKE_INSTALL_PREFIX=/usr/local
 ARG NUM_THREADS=1
@@ -123,8 +176,11 @@ RUN set -x && \
 ENV QP_OASES_DIR=${CMAKE_INSTALL_PREFIX}/lib/cmake/qp_oases
 
 
+
+
 # Set up the bazel setting
 RUN echo "build --copt=-fdiagnostics-color=always\nrun --copt=-fdiagnostics-color=always" >> /etc/bazel.bazelrc 
+# libnvidia-gl-440 
 
 # Set up workspace
 # RUN mkdir -p /usr/visual_frontend
