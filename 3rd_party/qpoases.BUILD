@@ -1,5 +1,5 @@
 cc_library(
-	name="rbdl",
+	name="qpoases",
 	srcs = glob(["lib/libqpOASES.*"]),
 	hdrs = glob(["include/qpOASES/**/*.hpp","include/qpOASES.hpp"]),
 	includes = ["include"],

@@ -7,5 +7,3 @@ cc_library(
 	visibility = ["//visibility:public"],
 	linkstatic = 1,
 )
-
-#, "lib/x86_64-linux-gnu/libEGL.so", "lib/x86_64-linux-gnu/libGL.so", "lib/x86_64-linux-gnu/libGLEW.so*"

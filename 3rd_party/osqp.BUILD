@@ -1,5 +1,5 @@
 cc_library(
-	name="rbdl",
+	name="osqp",
 	srcs = glob(["lib/libosqp*.*", "lib/libqdldl*.*"]),
 	hdrs = glob(["include/osqp/**/*.h"]),
 	includes = ["include"],
