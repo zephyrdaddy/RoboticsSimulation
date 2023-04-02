@@ -35,6 +35,18 @@ float_t ctrl_update_freq = 100;
 mjtNum last_update = 0.0;
 mjtNum ctrl;
 
+
+void initialize_model() {
+
+    // initial position
+    d->qpos[0] = -0.5;
+    d->qpos[1] = 1.0;
+
+    // mj_forward(m, d);
+
+
+}
+
 // keyboard callback
 void keyboard(GLFWwindow* window, int key, int scancode, int act, int mods)
 {
@@ -42,6 +54,7 @@ void keyboard(GLFWwindow* window, int key, int scancode, int act, int mods)
     if( act==GLFW_PRESS && key==GLFW_KEY_BACKSPACE )
     {
         mj_resetData(m, d);
+        initialize_model();
         mj_forward(m, d);
     }
 }
@@ -112,28 +125,26 @@ void mycontroller(const mjModel* m, mjData* d)
     std::cout << "joint velocity: " << d->qvel[0] << std::endl;
     std::cout << "Sensor output: " << d->sensordata[0] << std::endl;
 
-    // m->key_ctrl
-    
     // controller with true values, but it is cheating.
 //    ctrl = 3.5*(-d->qvel[0]-10.0*d->qpos[0]);
 
     // controller with sensor readings
-    if (previous_time == 0)
-    {
-        previous_time = d->time;
-        return;
-    }
-    if (d->time - last_update > 1.0/ctrl_update_freq)
-    {
-        mjtNum vel = (d->sensordata[0] - position_history)/(d->time-previous_time);
-        ctrl = 3.5*(-vel-10.0*d->sensordata[0]);
-        last_update = d->time;
-        position_history = d->sensordata[0];
-        previous_time = d->time;
-    }
-    d->ctrl[0] = ctrl;
-    
-    std::cout << "torque effort: " << ctrl << std::endl;
+    // if (previous_time == 0)
+    // {
+    //     previous_time = d->time;
+    //     return;
+    // }
+    // if (d->time - last_update > 1.0/ctrl_update_freq)
+    // {
+    //     mjtNum vel = (d->sensordata[0] - position_history)/(d->time-previous_time);
+    //     ctrl = 3.5*(-vel-10.0*d->sensordata[0]);
+    //     last_update = d->time;
+    //     position_history = d->sensordata[0];
+    //     previous_time = d->time;
+    // }
+    // d->ctrl[0] = ctrl;
+
+    // std::cout << "torque effort: " << ctrl << std::endl;
 }
 
 
@@ -152,7 +163,7 @@ int main(int argc, const char** argv)
     // check command-line arguments
     if( argc<2 )
         // m = mj_loadXML("../models/invertedPendulum.xml", 0, error, 1000);
-        m = mj_loadXML("/usr/master-robotics/models/invertedPendulum.xml", 0, error, 1000);
+        m = mj_loadXML("/usr/master-robotics/models/manipulator.xml", 0, error, 1000);
 
     else
         if( strlen(argv[1])>4 && !strcmp(argv[1]+strlen(argv[1])-4, ".mjb") )
@@ -192,8 +203,7 @@ int main(int argc, const char** argv)
     // install control callback
     mjcb_control = mycontroller;
 
-    // initial position
-    d->qpos[0] = 1.57;
+    initialize_model();
 
     // run main loop, target real-time simulation and 60 fps rendering
     mjtNum timezero = d->time;

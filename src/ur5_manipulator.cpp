@@ -35,6 +35,19 @@ float_t ctrl_update_freq = 100;
 mjtNum last_update = 0.0;
 mjtNum ctrl;
 
+
+void initialize_model() {
+
+    // initial position
+    d->qpos[0] = 0.0;
+    d->qpos[1] = -1.0;
+    
+
+    mj_forward(m, d);
+
+
+}
+
 // keyboard callback
 void keyboard(GLFWwindow* window, int key, int scancode, int act, int mods)
 {
@@ -42,10 +55,13 @@ void keyboard(GLFWwindow* window, int key, int scancode, int act, int mods)
     if( act==GLFW_PRESS && key==GLFW_KEY_BACKSPACE )
     {
         mj_resetData(m, d);
+        initialize_model();
         mj_forward(m, d);
     }
 }
   
+
+
 
 // mouse button callback
 void mouse_button(GLFWwindow* window, int button, int act, int mods)
@@ -106,34 +122,45 @@ void scroll(GLFWwindow* window, double xoffset, double yoffset)
 void mycontroller(const mjModel* m, mjData* d)
 {
     // printouts for debugging purposes
-    std::cout << "number of position coordinates: " << m->nq << std::endl;
-    std::cout << "number of degrees of freedom: " << m->nv << std::endl;
-    std::cout << "joint position: " << d->qpos[0] << std::endl;
-    std::cout << "joint velocity: " << d->qvel[0] << std::endl;
-    std::cout << "Sensor output: " << d->sensordata[0] << std::endl;
-
-    // m->key_ctrl
-    
+    // std::cout << "number of position coordinates: " << m->nq << std::endl;
+    // std::cout << "number of degrees of freedom: " << m->nv << std::endl;
+    std::cout << "joint position: " << d->qpos[3] << std::endl;
+    std::cout << "joint velocity: " << d->qvel[3] << std::endl;
+    // std::cout << "Sensor output: " << d->sensordata[0] << std::endl;
+    // if (d->qpos[3] < 0) {
+    //   ctrl = -0.5;
+    // }
+    // else { //if (d->qpos[3] < 0.5) {
+    //   ctrl = 0.5;
+    // }
+    ctrl = cos(d->time / 2);
+    d->ctrl[3] = ctrl;
+    ctrl = sin(d->time / 2);
+    d->ctrl[2] = ctrl;
+    ctrl = cos(d->time / 2);
+    d->ctrl[1] = ctrl;
+    // ctrl = cos(d->time / 2);
+    d->ctrl[0] = ctrl;
     // controller with true values, but it is cheating.
 //    ctrl = 3.5*(-d->qvel[0]-10.0*d->qpos[0]);
 
     // controller with sensor readings
-    if (previous_time == 0)
-    {
-        previous_time = d->time;
-        return;
-    }
-    if (d->time - last_update > 1.0/ctrl_update_freq)
-    {
-        mjtNum vel = (d->sensordata[0] - position_history)/(d->time-previous_time);
-        ctrl = 3.5*(-vel-10.0*d->sensordata[0]);
-        last_update = d->time;
-        position_history = d->sensordata[0];
-        previous_time = d->time;
-    }
-    d->ctrl[0] = ctrl;
-    
-    std::cout << "torque effort: " << ctrl << std::endl;
+    // if (previous_time == 0)
+    // {
+    //     previous_time = d->time;
+    //     return;
+    // }
+    // if (d->time - last_update > 1.0/ctrl_update_freq)
+    // {
+    //     mjtNum vel = (d->sensordata[0] - position_history)/(d->time-previous_time);
+    //     ctrl = 3.5*(-vel-10.0*d->sensordata[0]);
+    //     last_update = d->time;
+    //     position_history = d->sensordata[0];
+    //     previous_time = d->time;
+    // }
+    // d->ctrl[0] = ctrl;
+
+    // std::cout << "torque effort: " << ctrl << std::endl;
 }
 
 
@@ -150,10 +177,11 @@ int main(int argc, const char** argv)
     char error[1000] = "Could not load binary model";
 
     // check command-line arguments
-    if( argc<2 )
+    if( argc<2 ) {
         // m = mj_loadXML("../models/invertedPendulum.xml", 0, error, 1000);
-        m = mj_loadXML("/usr/master-robotics/models/invertedPendulum.xml", 0, error, 1000);
-
+        // m = mj_loadXML("/usr/master-robotics/models/manipulator.xml", 0, error, 1000);
+        m = mj_loadXML("/usr/master-robotics/models/UR5_with_gripper/UR5gripper_v3.xml", 0, error, 1000);
+    }
     else
         if( strlen(argv[1])>4 && !strcmp(argv[1]+strlen(argv[1])-4, ".mjb") )
             m = mj_loadModel(argv[1], 0);
@@ -164,6 +192,43 @@ int main(int argc, const char** argv)
 
     // make data
     d = mj_makeData(m);
+    
+    // Try to print the model and data
+    printf("Let's understand the model and data\n");
+
+    int num_pos_coord = m->nq;
+    int num_df = m->nv;
+    int num_active_const = d->nefc;
+
+    int num_controls = m->nu;
+    int num_joints = m->njnt;
+
+
+    printf("Number of position coor : %d \n", num_pos_coord);
+    printf("Number of deg freedom : %d\n", num_df);
+    printf("Number of joints : %d\n", num_joints);
+    printf("Number of controls : %d\n", num_controls);
+    printf("Number of active constraints : %d\n", num_active_const);
+
+    for (int i = 0; i < num_pos_coord; i++) {
+      const char* ctrl_name = mj_id2name(m, mjOBJ_ACTUATOR, i);
+      printf("Control %d %s\n", i, ctrl_name);
+    }
+    for (int i = 0; i < num_joints; i++) {
+      const char* joint_name = mj_id2name(m, mjOBJ_JOINT, i);
+      printf("Joint %d %s\n", i, joint_name);
+    }
+
+    // for (int i = 0; i < num_pos_coord; i++) {
+    //   const char* joint_name = mj_id2name(m, mjOBJ_GEOM, i);
+    //   printf("Joint %d %s\n", i, joint_name);
+    // }
+
+
+    // I need the map between the idx and the name of the position.
+    // Does the ctrl idx align with the position idx?
+
+    // mj_id2name(m, );
 
 
     // init GLFW
@@ -192,8 +257,7 @@ int main(int argc, const char** argv)
     // install control callback
     mjcb_control = mycontroller;
 
-    // initial position
-    d->qpos[0] = 1.57;
+    initialize_model();
 
     // run main loop, target real-time simulation and 60 fps rendering
     mjtNum timezero = d->time;

@@ -11,3 +11,28 @@ cc_binary(
         visibility = ["//visibility:public"],
         linkstatic = 1,
 )
+
+cc_binary(
+        name = "manipulator",
+        srcs = ["src/manipulation.cpp"],
+        deps = ["@mujoco//:mujoco",
+                "@osqp//:osqp",
+                "@rbdl//:rbdl",
+                "@qpoases//:qpoases",
+                "@glfw3//:glfw3"],
+        visibility = ["//visibility:public"],
+        linkstatic = 1,
+)
+
+
+cc_binary(
+        name = "ur5_manipulator",
+        srcs = ["src/ur5_manipulator.cpp"],
+        deps = ["@mujoco//:mujoco",
+                "@osqp//:osqp",
+                "@rbdl//:rbdl",
+                "@qpoases//:qpoases",
+                "@glfw3//:glfw3"],
+        visibility = ["//visibility:public"],
+        linkstatic = 1,
+)
